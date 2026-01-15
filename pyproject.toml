@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nadeshiko_api_client"
+authors = [{ name = "Abdo", email = "abdo@abdnh.net" }]
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+dynamic = ["version"]
+dependencies = ["dacite>=1.9.2"]
+
+[project.urls]
+Repository = "https://github.com/abdnh/nadeshiko-api-client"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "PL", "TRY", "FA"]
+
+[dependency-groups]
+dev = ["ruff>=0.14.12"]

@@ -1,0 +1,2 @@
+class NadeshikoException(Exception):
+    pass
