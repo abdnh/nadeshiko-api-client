@@ -2,15 +2,12 @@ from __future__ import annotations
 
 import dataclasses
 from http import HTTPStatus
-from typing import Any, TypeVar
+from typing import Any
 
 import requests
-from dacite import from_dict
 
 from .exceptions import NadeshikoException
-from .models import ResponseV1, SentenceSearchRequest
-
-T = TypeVar("T")
+from .models import SearchRequest, SearchResponse, Segment
 
 
 class Client:
@@ -18,15 +15,21 @@ class Client:
         self.session = requests.Session()
         self.token = token
 
-    def _request(self, method: str, path: str, payload: Any, response_type: type[T]) -> T:
-        headers = {"Content-Type": "application/json", "X-API-Key": self.token}
+    def _request(self, method: str, path: str, payload: Any) -> Any:
+        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {self.token}"}
         response = self.session.request(
-            method=method, url=f"https://api.brigadasos.xyz/api/v1/{path}", json=payload, headers=headers
+            method=method, url=f"https://api.nadeshiko.co/v1/{path}", json=payload, headers=headers
         )
         if response.status_code != HTTPStatus.OK:
             raise NadeshikoException(response.text)
-        return from_dict(response_type, response.json())
+        return response.json()
 
-    def search_sentence(self, request: SentenceSearchRequest) -> ResponseV1:
-        response = self._request("POST", "search/media/sentence", dataclasses.asdict(request), ResponseV1)
+    def search(self, request: SearchRequest) -> SearchResponse:
+        payload = dataclasses.asdict(request)
+        payload["query"]["exactMatch"] = payload["query"].pop("exact_match")
+        response_dict = self._request("POST", "search", payload)
+        segments: list[Segment] = []
+        for segment in response_dict.get("segments", []):
+            segments.append(Segment(public_id=segment["publicId"], text=segment["textJa"]["content"]))
+        response = SearchResponse(segments)
         return response
